@@ -1,4 +1,5 @@
 import {getLocalUser} from "./helpers/auth"
+import Axios from "axios";
 
 const user = getLocalUser();
 
@@ -27,7 +28,7 @@ export default{
            return state.customers;
        }
     },
-    muttations:{
+    mutations:{
         login(state){
             state.loading = true;
             state.auth_error = null;
@@ -46,12 +47,25 @@ export default{
         logout(state){
             localStorage.removeItem("user")
             state.loading = false;
-            state.auth_error = null;
+            state.currentUser = null
+        },
+        updateCustomers(state, payload){
+            state.customers = payload;
         }
     },
     actions:{
         login(context){
             context.commit('login')
+        },
+        getCustomers(context){
+            axios.get('/api/customers',{
+                headers:{
+                    'Authorization': `Bearer ${context.state.currentUser.token}`
+                }
+            })
+            .then((response)=>{
+               context.commit('updateCustomers',response.data.customers); 
+            })
         }
     }
 };

@@ -16,6 +16,12 @@
                               <div class="form-group row">
                                 <input type="submit" value="Login"/>
                             </div>
+
+                             <div class="form-group row" v-if="authError">
+                                <p class="error">
+                                    {{authError}}
+                                </p>
+                            </div>
                         </form>
                     </div>
                 </div>
@@ -37,7 +43,7 @@
                 error:null
             }
         },
-        metods:{
+        methods:{
             authenticate(){
                 this.$store.dispatch('login')
                 
@@ -50,11 +56,19 @@
                     this.$store.commit("loginFailed",{error})
                 });
             }
+        },
+        computed:{
+            authError() {
+                return this.$store.getters.authError
+            }
         }
         
     }
 </script>
 
-<style lang="scss" scoped>
-
+<style soped>
+.error {
+    text-align: center;
+    color: red;
+}
 </style>
