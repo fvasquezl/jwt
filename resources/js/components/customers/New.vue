@@ -1,7 +1,7 @@
 <template>
     <div class="customer-new">
         <form @submit.prevent="add">
-            <table class="table">
+            <table class="table table-bordered">
                 <tr>
                     <th>Name</th>
                     <td>
@@ -26,12 +26,30 @@
                         <input type="text" class="form-control" v-model="customer.website" placeholder="Customer Website" />
                     </td>
                 </tr>
+                <tr>
+                    <td>
+                        <router-link to="/customers" class="btn btn-link">Cancel</router-link>
+                    </td>
+                    <td class="text-right">
+                        <input type="submit" value="Create" class="btn btn-primary">
+                    </td>
+                </tr>
             </table>
         </form>
+        <div class="errors" v-if="errors">
+            <ul>
+                <li v-for="(fieldsError,fieldName) in errors" :key="fieldName">
+                    <strong>{{fieldName}}</strong> {{fieldsError.join('/n')}}
+                </li>
+            </ul>
+        </div>
     </div>
 </template>
 
 <script>
+ 
+import validate from 'validate.js';
+
     export default {
         name: 'new',
         data(){
@@ -46,34 +64,48 @@
             }
 
         },
+        computed:{
+            currentUser(){
+                return this.$store.getters.currentUser;
+            }
+        },
         methods:{
             add(){
                 this.errors = null;
-                const constraints = $this.getConstraints()
+                const constraints = this.getConstraints();
+                const errors = validate(this.$data.customer,constraints)
+                if(errors){
+                    this.errors = errors;
+                    return;
+                }
+                axios.post('/api/customers/new',this.$data.customer)
+                .then((response)=>{
+                    this.$router.push('/customers');
+                });
             },
             getConstraints(){
                 return{
                     name:{
-                        presense: true,
-                        lenght:{
+                        presence: true,
+                        length:{
                             minimum:3,
                             message: 'Must be at least 3 characters long'
                         }
                     },
                     email:{
-                        presense: true,
+                        presence: true,
                         email:true,
                     },
                      phone:{
-                        presense: true,
-                        numericallity:true,
-                        lenght:{
+                        presence: true,
+                        numericality:true,
+                        length:{
                             minimum:10,
                             message: 'Must be at least 10 characters long'
                         }
                     },
                     website:{
-                        presense: true,
+                        presence: true,
                         url:true
                     },
                 }
@@ -84,5 +116,9 @@
 </script>
 
 <style lang="scss" scoped>
-
+.errors{
+    background: lightcoral;
+    border-radius: 5px;
+    padding: 21px 0 2px 0;
+}
 </style>
