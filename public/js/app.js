@@ -2044,8 +2044,8 @@ __webpack_require__.r(__webpack_exports__);
     authenticate: function authenticate() {
       var _this = this;
 
-      this.$store.dispatch('login');
-      Object(_helpers_auth__WEBPACK_IMPORTED_MODULE_0__["login"])(this.$data.form).then(function (res) {
+      this.$store.dispatch('signIn');
+      this.$store.dispatch('login', this.form).then(function (res) {
         _this.$store.commit("loginSuccess", res);
 
         _this.$router.push({
@@ -56338,7 +56338,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var vue_router__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! vue-router */ "./node_modules/vue-router/dist/vue-router.esm.js");
 /* harmony import */ var vuex__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! vuex */ "./node_modules/vuex/dist/vuex.esm.js");
 /* harmony import */ var _routes__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./routes */ "./resources/js/routes.js");
-/* harmony import */ var _store__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./store */ "./resources/js/store.js");
+/* harmony import */ var _store_store__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./store/store */ "./resources/js/store/store.js");
 /* harmony import */ var _components_MainApp_vue__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./components/MainApp.vue */ "./resources/js/components/MainApp.vue");
 /* harmony import */ var _helpers_general__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./helpers/general */ "./resources/js/helpers/general.js");
 __webpack_require__(/*! ./bootstrap */ "./resources/js/bootstrap.js");
@@ -56352,7 +56352,7 @@ __webpack_require__(/*! ./bootstrap */ "./resources/js/bootstrap.js");
 
 vue__WEBPACK_IMPORTED_MODULE_0___default.a.use(vue_router__WEBPACK_IMPORTED_MODULE_1__["default"]);
 vue__WEBPACK_IMPORTED_MODULE_0___default.a.use(vuex__WEBPACK_IMPORTED_MODULE_2__["default"]);
-var store = new vuex__WEBPACK_IMPORTED_MODULE_2__["default"].Store(_store__WEBPACK_IMPORTED_MODULE_4__["default"]);
+var store = new vuex__WEBPACK_IMPORTED_MODULE_2__["default"].Store(_store_store__WEBPACK_IMPORTED_MODULE_4__["default"]);
 var router = new vue_router__WEBPACK_IMPORTED_MODULE_1__["default"]({
   routes: _routes__WEBPACK_IMPORTED_MODULE_3__["routes"],
   mode: 'history'
@@ -57053,25 +57053,26 @@ __webpack_require__.r(__webpack_exports__);
 /*!**************************************!*\
   !*** ./resources/js/helpers/auth.js ***!
   \**************************************/
-/*! exports provided: login, getLocalUser */
+/*! exports provided: getLocalUser */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "login", function() { return login; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getLocalUser", function() { return getLocalUser; });
 /* harmony import */ var _general__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./general */ "./resources/js/helpers/general.js");
+ // export function login(credentials){
+//     return new Promise((res,rej)=>{
+//         axios.post('/api/auth/login',credentials)
+//         .then((response)=>{
+//             setAuthorization(response.data.access_token);
+//             res(response.data);
+//         })
+//         .catch((err)=>{
+//             rej("Wrong email or password")
+//         })
+//     })
+// }
 
-function login(credentials) {
-  return new Promise(function (res, rej) {
-    axios.post('/api/auth/login', credentials).then(function (response) {
-      Object(_general__WEBPACK_IMPORTED_MODULE_0__["setAuthorization"])(response.data.access_token);
-      res(response.data);
-    })["catch"](function (err) {
-      rej("Wrong email or password");
-    });
-  });
-}
 function getLocalUser() {
   var userStr = localStorage.getItem("user");
 
@@ -57180,82 +57181,122 @@ var routes = [{
 
 /***/ }),
 
-/***/ "./resources/js/store.js":
-/*!*******************************!*\
-  !*** ./resources/js/store.js ***!
-  \*******************************/
+/***/ "./resources/js/store/modules/login.js":
+/*!*********************************************!*\
+  !*** ./resources/js/store/modules/login.js ***!
+  \*********************************************/
 /*! exports provided: default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _helpers_auth__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./helpers/auth */ "./resources/js/helpers/auth.js");
-/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! axios */ "./node_modules/axios/index.js");
-/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(axios__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var _helpers_auth__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../helpers/auth */ "./resources/js/helpers/auth.js");
+/* harmony import */ var _helpers_general__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../helpers/general */ "./resources/js/helpers/general.js");
 
 
 var user = Object(_helpers_auth__WEBPACK_IMPORTED_MODULE_0__["getLocalUser"])();
+var state = {
+  currentUser: user,
+  isLoggedIn: !!user,
+  loading: false,
+  auth_error: null
+};
+var getters = {
+  isLoading: function isLoading(state) {
+    return state.loading;
+  },
+  isLoggedIn: function isLoggedIn(state) {
+    return state.isLoggedIn;
+  },
+  currentUser: function currentUser(state) {
+    return state.currentUser;
+  },
+  authError: function authError(state) {
+    return state.auth_error;
+  }
+};
+var mutations = {
+  signIn: function signIn(state) {
+    state.loading = true;
+    state.auth_error = null;
+  },
+  loginSuccess: function loginSuccess(state, payload) {
+    state.auth_error = null;
+    state.isLoggedIn = true;
+    state.loading = false;
+    state.currentUser = Object.assign({}, payload.user, {
+      token: payload.access_token
+    });
+    localStorage.setItem('user', JSON.stringify(state.currentUser));
+  },
+  loginFailed: function loginFailed(state, payload) {
+    state.loading = false;
+    state.auth_error = payload.error;
+  },
+  logout: function logout(state) {
+    localStorage.removeItem("user");
+    state.loading = false;
+    state.currentUser = null;
+  }
+};
+var actions = {
+  signIn: function signIn(context) {
+    context.commit('signIn');
+  },
+  login: function login(credentials) {
+    return new Promise(function (res, rej) {
+      axios.post('/api/auth/login', credentials).then(function (response) {
+        Object(_helpers_general__WEBPACK_IMPORTED_MODULE_1__["setAuthorization"])(response.data.access_token);
+        res(response.data);
+      })["catch"](function (err) {
+        rej("Wrong email or password");
+      });
+    });
+  }
+};
+/* harmony default export */ __webpack_exports__["default"] = ({
+  state: state,
+  getters: getters,
+  mutations: mutations,
+  actions: actions
+});
+
+/***/ }),
+
+/***/ "./resources/js/store/store.js":
+/*!*************************************!*\
+  !*** ./resources/js/store/store.js ***!
+  \*************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _modules_login__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./modules/login */ "./resources/js/store/modules/login.js");
+
 /* harmony default export */ __webpack_exports__["default"] = ({
   state: {
-    currentUser: user,
-    isLoggedIn: !!user,
-    loading: false,
-    auth_error: null,
     customers: []
   },
   getters: {
-    isLoading: function isLoading(state) {
-      return state.loading;
-    },
-    isLoggedIn: function isLoggedIn(state) {
-      return state.isLoggedIn;
-    },
-    currentUser: function currentUser(state) {
-      return state.currentUser;
-    },
-    authError: function authError(state) {
-      return state.auth_error;
-    },
     customers: function customers(state) {
       return state.customers;
     }
   },
   mutations: {
-    login: function login(state) {
-      state.loading = true;
-      state.auth_error = null;
-    },
-    loginSuccess: function loginSuccess(state, payload) {
-      state.auth_error = null;
-      state.isLoggedIn = true;
-      state.loading = false;
-      state.currentUser = Object.assign({}, payload.user, {
-        token: payload.access_token
-      });
-      localStorage.setItem('user', JSON.stringify(state.currentUser));
-    },
-    loginFailed: function loginFailed(state, payload) {
-      state.loading = false;
-      state.auth_error = payload.error;
-    },
-    logout: function logout(state) {
-      localStorage.removeItem("user");
-      state.loading = false;
-      state.currentUser = null;
-    },
     updateCustomers: function updateCustomers(state, payload) {
       state.customers = payload;
     }
   },
   actions: {
-    login: function login(context) {
-      context.commit('login');
-    },
     getCustomers: function getCustomers(context) {
       axios.get('/api/customers').then(function (response) {
         context.commit('updateCustomers', response.data.customers);
       });
     }
+  },
+  modules: {
+    login: _modules_login__WEBPACK_IMPORTED_MODULE_0__["default"]
   }
 });
 

@@ -6,11 +6,11 @@
                     <div class="card-body">
                         <form @submit.prevent="authenticate">
                             <div class="form-group row">
-                                <label for="email">Email:</label>
+                                <label>Email:</label>
                                 <input v-model="form.email" type="email" class="form-control" placeholder="Email Address"/>
                             </div>
                               <div class="form-group row">
-                                <label for="password">Password:</label>
+                                <label>Password:</label>
                                 <input v-model="form.password" type="password" class="form-control" placeholder="Password"/>
                             </div>
                               <div class="form-group row">
@@ -30,8 +30,6 @@
 </template>
 
 <script>
-    import {login} from '../../helpers/auth'
-
     export default {
         name:"login",
         data(){
@@ -45,9 +43,9 @@
         },
         methods:{
             authenticate(){
-                this.$store.dispatch('login')
-                
-                login(this.$data.form)
+                this.$store.dispatch('signIn');
+
+                this.$store.dispatch('login',this.form)
                 .then((res)=>{
                     this.$store.commit("loginSuccess",res);
                     this.$router.push({path:'/'})
@@ -62,11 +60,11 @@
                 return this.$store.getters.authError
             }
         }
-        
+
     }
 </script>
 
-<style soped>
+<style scoped>
 .error {
     text-align: center;
     color: red;

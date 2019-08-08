@@ -3,7 +3,7 @@ import Vue from 'vue';
 import VueRouter from 'vue-router'
 import Vuex from 'vuex';
 import {routes} from './routes';
-import StoreData from './store';
+import StoreData from './store/store';
 import MainApp from './components/MainApp.vue'
 import {initialize} from './helpers/general';
 
@@ -15,7 +15,7 @@ const store = new Vuex.Store(StoreData);
 const router = new VueRouter({
     routes,
     mode: 'history'
-})
+});
 
 initialize(store,router);
 
